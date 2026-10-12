@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALY Kichwa: Aprende a Conjugar y Construir Oraciones</title>
+    <style>
+        :root {
+            --primary: #2C3E50;
+            --accent: #D35400;
+            --secondary: #27AE60;
+            --pronoun-bg: #E8F8F5;
+            --verb-bg: #FEF9E7;
+            --background: #F4F6F7;
+            --card-bg: #FFFFFF;
+            --text-color: #2C3E50;
+            --radius: 16px;
+        }
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial Rounded MT Bold', sans-serif, system-ui;
+            background-color: var(--background);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 520px;
+            height: 100vh;
+            max-height: 880px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+        @media (min-width: 768px) {
+            .app-container {
+                width: 500px;
+                height: 820px;
+                border: 6px solid #D5D8DC;
+            }
+        }
+        .screen {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            text-align: center;
+        }
+        .screen.active {
+            display: flex;
+        }
+        h1 { color: var(--primary); font-size: 1.6rem; margin-bottom: 5px; }
+        .subtitle { color: #7F8C8D; font-size: 0.95rem; margin-bottom: 15px; }
+        
+        /* Botones e Interactivos */
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(211, 84, 0, 0.3);
+            margin: 8px 0;
+            transition: transform 0.1s ease;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-secondary { background-color: var(--secondary); box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3); }
+        .btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); }
+
+        /* Tarjetas de Pronombres y Verbos */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .card-item {
+            background: var(--pronoun-bg);
+            border: 2px solid #A3E4D7;
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .card-item.active-card {
+            border-color: var(--secondary);
+            background: #D1F2EB;
+            transform: scale(1.02);
+        }
+        .card-item h3 { margin: 0 0 5px 0; color: var(--primary); font-size: 1.1rem; }
+        .card-item p { margin: 0; font-size: 0.85rem; color: #555; }
+
+        /* Tablas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 0.95rem;
+        }
+        th, td {
+            border: 1px solid #D5D8DC;
+            padding: 8px;
+            text-align: center;
+        }
+        th { background: #EAECEE; color: var(--primary); }
+        td span.highlight { color: var(--accent); font-weight: bold; }
+
+        /* Constructor de oraciones */
+        .token-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin: 15px 0;
+            min-height: 50px;
+            background: #F2F4F4;
+            padding: 12px;
+            border-radius: 12px;
+        }
+        .token {
+            background: white;
+            border: 2px solid #BDC3C7;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .token:hover { border-color: var(--accent); }
+
+        /* Barra Superior */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background: #E0E0E0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--secondary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- BARRA SUPERIOR -->
+    <div class="top-bar">
+        <span onclick="goToScreen('screen-home')" style="cursor:pointer; font-size:1.2rem;" title="Inicio">🏠</span>
+        <span style="font-weight: bold; font-size: 0.9rem;">Progreso: <span id="progress-text">0</span>%</span>
+    </div>
+    <div class="progress-bar-container">
+        <div id="progress-fill" class="progress-bar-fill"></div>
+    </div>
+
+    <!-- PANTALLA A: INICIO -->
+    <div id="screen-home" class="screen active">
+        <h1>¡Aprendamos Kichwa con ALY!</h1>
+        <p class="subtitle">Hoy aprenderemos el verbo KANA y construiremos nuestras primeras oraciones.</p>
+        
+        <div style="background: #E8F8F5; border: 2px dashed var(--secondary); border-radius: 20px; padding: 20px; margin: 15px 0;">
+            <p style="margin:0; font-weight: bold; color: #16A085;">[ Espacio de Imagen Maestra de ALY ]</p>
+        </div>
+
+        <button class="btn" onclick="goToScreen('screen-pronouns')">1. APRENDE A CONJUGAR</button>
+        <button class="btn btn-secondary" onclick="goToScreen('screen-builder')">2. CONSTRUYE ORACIONES</button>
+        <button class="btn btn-outline" onclick="goToScreen('screen-challenge')">🌟 Reto Final de ALY</button>
+    </div>
+
+    <!-- PANTALLA B: PRONOMBRES Y CONJUGACIÓN -->
+    <div id="screen-pronouns" class="screen">
+        <h1>Pronombres y el Verbo Kana</h1>
+        <p class="subtitle">Kana significa <b>ser o estar</b>. Toca un pronombre:</p>
+        
+        <div class="grid-cards" id="pronouns-grid"></div>
+        
+        <div id="pronoun-detail" style="background: var(--verb-bg); padding: 12px; border-radius: 10px; margin: 10px 0; font-weight: bold; min-height: 40px;">
+            Selecciona un pronombre arriba para ver su forma verbal.
+        </div>
+
+        <h3 style="margin-top:15px; font-size:1.1rem; color:var(--primary);">Tabla de Conjugación (Presente)</h3>
+        <table>
+            <tr><th>Pronombre</th><th>Verbo</th><th>Significado</th></tr>
+            <tr><td>Ñuka</td><td>kan<span class="highlight">i</span></td><td>Yo soy / estoy</td></tr>
+            <tr><td>Kan</td><td>kan<span class="highlight">ki</span></td><td>Tú eres / estás</td></tr>
+            <tr><td>Pay</td><td>kan</td><td>Él / ella es / está</td></tr>
+            <tr><td>Ñukanchik</td><td>kan<span class="highlight">chik</span></td><td>Nosotros somos / estamos</td></tr>
+            <tr><td>Kankuna</td><td>kan<span class="highlight">kichik</span></td><td>Ustedes son / están</td></tr>
+            <tr><td>Paykuna</td><td>kan<span class="highlight">kuna</span></td><td>Ellos / ellas son / están</td></tr>
+        </table>
+
+        <button class="btn" onclick="startConjugationQuiz()">Practicar Conjugación</button>
+        <button class="btn btn-outline" onclick="goToScreen('screen-home')">Volver al Inicio</button>
+    </div>
+
+    <!-- PANTALLA B2: JUEGO DE CONJUGACIÓN -->
+    <div id="screen-quiz" class="screen">
+        <h1>Práctica de Conjugación</h1>
+        <p id="quiz-question" style="font-size: 1.1rem; font-weight: bold; margin: 20px 0;"></p>
+        <div id="quiz-options" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        <p id="quiz-feedback" style="margin-top: 15px; font-weight: bold; min-height: 30px;"></p>
+        <button class="btn btn-outline" style="margin-top:20px;" onclick="goToScreen('screen-pronouns')">Volver</button>
+    </div>
+
+    <!-- PANTALLA D: CONSTRUCTOR DE ORACIONES -->
+    <div id="screen-builder" class="screen">
+        <h1>Construye Oraciones</h1>
+        <p class="subtitle">En Kichwa, el verbo suele ir al final. Forma la oración:</p>
+        
+        <div style="background: #FEF9E7; padding: 15px; border-radius: 12px; margin-bottom: 10px;">
+            <p id="target-translation" style="margin: 0; font-weight: bold; color: var(--accent);">Traducción: Yo soy docente</p>
+        </div>
+
+        <p style="font-size: 0.9rem; color: #555; margin: 5px 0;">Toca las fichas en orden:</p>
+        <div id="selected-tokens" class="token-container"></div>
+        
+        <p style="font-size: 0.9rem; color: #555; margin: 5px 0;">Fichas disponibles:</p>
+        <div id="available-tokens" class="token-container"></div>
+
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 15px;">
+            <button class="btn" style="padding: 8px 16px; font-size: 0.95rem;" onclick="checkSentence()">Comprobar</button>
+            <button class="btn btn-outline" style="padding: 8px 16px; font-size: 0.95rem;" onclick="resetSentence()">Reiniciar</button>
+        </div>
+        <p id="builder-feedback" style="font-weight: bold; margin-top: 10px;"></p>
+        <button class="btn btn-secondary" style="margin-top: 15px;" onclick="goToScreen('screen-home')">Volver al Inicio</button>
+    </div>
+
+    <!-- PANTALLA F: RETO FINAL DE ALY -->
+    <div id="screen-challenge" class="screen">
+        <h1>🌟 Reto Final de ALY</h1>
+        <p class="subtitle">¡Demuestra todo lo que aprendiste hoy!</p>
+        <div style="background: var(--pronoun-bg); padding: 20px; border-radius: 15px; margin: 20px 0;">
+            <h3 style="color: var(--secondary);">¡Excelente trabajo!</h3>
+            <p>Has completado las secciones de pronombres, conjugación del verbo Kana y construcción de oraciones básicas.</p>
+        </div>
+        <button class="btn" onclick="resetApp()">Repetir Reto / Reiniciar</button>
+        <button class="btn btn-outline" onclick="goToScreen('screen-home')">Volver al Inicio</button>
+    </div>
+
+</div>
+
+<script>
+    // 1. ESTRUCTURAS DE DATOS SEPARADAS (Fácilmente editables)
+    const pronounsData = [
+        { kichwa: "Ñuka", espanol: "yo", verb: "kani", meaning: "Yo soy / estoy" },
+        { kichwa: "Kan", espanol: "tú", verb: "kanki", meaning: "Tú eres / estás" },
+        { kichwa: "Pay", espanol: "él / ella", verb: "kan", meaning: "Él o ella es / está" },
+        { kichwa: "Ñukanchik", espanol: "nosotros / nosotras", verb: "kanchik", meaning: "Nosotros somos / estamos" },
+        { kichwa: "Kankuna", espanol: "ustedes", verb: "kankichik", meaning: "Ustedes son / están" },
+        { kichwa: "Paykuna", espanol: "ellos / ellas", verb: "kankuna", meaning: "Ellos o ellas son / están" }
+    ];
+
+    const sentencesData = [
+        { target: ["Ñuka", "yachachik", "kani"], meaning: "Yo soy docente." },
+        { target: ["Kan", "yachakuk", "kanki"], meaning: "Tú eres estudiante." },
+        { target: ["Pay", "yachachik", "kan"], meaning: "Él o ella es docente." },
+        { target: ["Ñukanchik", "yachakukkuna", "kanchik"], meaning: "Nosotros somos estudiantes." }
+    ];
+
+    let currentProgress = 0;
+    let currentSentenceIdx = 0;
+    let userSelectedTokens = [];
+    let currentAvailableTokens = [];
+
+    function updateProgress(value) {
+        currentProgress = value;
+        document.getElementById('progress-text').innerText = currentProgress;
+        document.getElementById('progress-fill').style.width = currentProgress + '%';
+    }
+
+    function goToScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        if (screenId === 'screen-pronouns') renderPronouns();
+        if (screenId === 'screen-builder') loadSentenceBuilder();
+    }
+
+    // Renderizar Pronombres
+    function renderPronouns() {
+        const grid = document.getElementById('pronouns-grid');
+        grid.innerHTML = '';
+        pronounsData.forEach((p, idx) => {
+            const div = document.createElement('div');
+            div.className = 'card-item';
+            div.innerHTML = `<h3>${p.kichwa}</h3><p>${p.espanol}</p>`;
+            div.onclick = () => selectPronoun(idx);
+            grid.appendChild(div);
+        });
+    }
+
+    function selectPronoun(idx) {
+        document.querySelectorAll('.card-item').forEach((el, i) => {
+            if (i === idx) el.classList.add('active-card');
+            else el.classList.remove('active-card');
+        });
+        const p = pronounsData[idx];
+        document.getElementById('pronoun-detail').innerHTML = 
+            `<b>${p.kichwa}</b> (${p.espanol}) ➔ <b>${p.verb}</b><br><span style="font-size:0.9rem; color:#555;">${p.meaning}</span>`;
+        updateProgress(40);
+    }
+
+    // Quiz de Conjugación
+    let quizCurrent = 0;
+    function startConjugationQuiz() {
+        goToScreen('screen-quiz');
+        quizCurrent = 0;
+        loadQuizQuestion();
+    }
+
+    function loadQuizQuestion() {
+        if (quizCurrent >= 3) {
+            document.getElementById('quiz-question').innerText = "¡Excelente! Has completado la práctica de conjugación.";
+            document.getElementById('quiz-options').innerHTML = '';
+            document.getElementById('quiz-feedback').innerText = '';
+            updateProgress(70);
+            return;
+        }
+        const p = pronounsData[quizCurrent];
+        document.getElementById('quiz-question').innerText = `¿Cuál es la forma verbal para "${p.kichwa}" (${p.espanol})?`;
+        
+        let options = [p.verb, "kan", "kanki"].sort(() => Math.random() - 0.5);
+        const optContainer = document.getElementById('quiz-options');
+        optContainer.innerHTML = '';
+        options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.style.margin = '4px 0';
+            btn.innerText = opt;
+            btn.onclick = () => checkQuizAnswer(opt, p.verb);
+            optContainer.appendChild(btn);
+        });
+        document.getElementById('quiz-feedback').innerText = '';
+    }
+
+    function checkQuizAnswer(selected, correct) {
+        const fb = document.getElementById('quiz-feedback');
+        if (selected === correct) {
+            fb.style.color = 'var(--secondary)';
+            fb.innerText = `¡Muy bien! Correcto.`;
+            quizCurrent++;
+            setTimeout(loadQuizQuestion, 1200);
+        } else {
+            fb.style.color = 'var(--accent)';
+            fb.innerText = `¡Casi! Inténtalo otra vez.`;
+        }
+    }
+
+    // Constructor de Oraciones
+    function loadSentenceBuilder() {
+        const s = sentencesData[currentSentenceIdx];
+        document.getElementById('target-translation').innerText = `Traducción: ${s.meaning}`;
+        userSelectedTokens = [];
+        currentAvailableTokens = [...s.target].sort(() => Math.random() - 0.5);
+        renderTokens();
+        document.getElementById('builder-feedback').innerText = '';
+    }
+
+    function renderTokens() {
+        const selContainer = document.getElementById('selected-tokens');
+        selContainer.innerHTML = '';
+        userSelectedTokens.forEach((t, i) => {
+            const span = document.createElement('div');
+            span.className = 'token';
+            span.style.background = '#D1F2EB';
+            span.innerText = t;
+            span.onclick = () => removeToken(i);
+            selContainer.appendChild(span);
+        });
+
+        const avContainer = document.getElementById('available-tokens');
+        avContainer.innerHTML = '';
+        currentAvailableTokens.forEach((t, i) => {
+            const span = document.createElement('div');
+            span.className = 'token';
+            span.innerText = t;
+            span.onclick = () => pickToken(i);
+            avContainer.appendChild(span);
+        });
+    }
+
+    function pickToken(idx) {
+        userSelectedTokens.push(currentAvailableTokens[idx]);
+        currentAvailableTokens.splice(idx, 1);
+        renderTokens();
+    }
+
+    function removeToken(idx) {
+        currentAvailableTokens.push(userSelectedTokens[idx]);
+        userSelectedTokens.splice(idx, 1);
+        renderTokens();
+    }
+
+    function checkSentence() {
+        const s = sentencesData[currentSentenceIdx];
+        const fb = document.getElementById('builder-feedback');
+        const isCorrect = userSelectedTokens.length === s.target.length && userSelectedTokens.every((val, index) => val === s.target[index]);
+        
+        if (isCorrect) {
+            fb.style.color = 'var(--secondary)';
+            fb.innerText = '¡Excelente! Oración construida correctamente 🎉';
+            updateProgress(100);
+            setTimeout(() => {
+                currentSentenceIdx = (currentSentenceIdx + 1) % sentencesData.length;
+                loadSentenceBuilder();
+            }, 2000);
+        } else {
+            fb.style.color = 'var(--accent)';
+            fb.innerText = 'Revisa el orden de las fichas (recuerda que el verbo suele ir al final).';
+        }
+    }
+
+    function resetSentence() {
+        loadSentenceBuilder();
+    }
+
+    function resetApp() {
+        currentProgress = 0;
+        currentSentenceIdx = 0;
+        updateProgress(0);
+        goToScreen('screen-home');
+    }
+
+    // Inicializar
+    updateProgress(10);
+</script>
+
+</body>
+</html>
